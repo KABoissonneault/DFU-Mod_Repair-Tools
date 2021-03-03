@@ -59,7 +59,7 @@ namespace RepairTools
                 DaggerfallUI.MessageBox("The tool is broken and cannot be used.");
                 return true;
             }
-            if (GameManager.Instance.AreEnemiesNearby())
+            if (GameManager.Instance.AreEnemiesNearby(true))
             {
                 DaggerfallUI.MessageBox("Can't use that with enemies around.");
                 return true;
