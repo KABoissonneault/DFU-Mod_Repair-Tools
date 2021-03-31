@@ -134,7 +134,7 @@ namespace RepairTools
                     itemToRepair.currentCondition += repairAmount;
                 }
                 bool toolBroke = currentCondition <= DurabilityLoss;
-                LowerCondition(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
+                LowerConditionWorkaround(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
 
                 // Force inventory window update
                 DaggerfallUI.Instance.InventoryWindow.Refresh();
@@ -143,6 +143,18 @@ namespace RepairTools
                 playerEntity.DecreaseFatigue(staminaDrainValue, true); // Reduce player current stamina value from the action of repairing.
                 DaggerfallUnity.Instance.WorldTime.Now.RaiseTime(TimeDrainValue); // Forwards time by an amount of minutes in-game time.
                 ShowCustomTextBox(toolBroke, itemToRepair, false); // Shows the specific text-box after repairing an item.
+            }
+        }
+
+        // Like DaggerfallUnityItem's LowerCondition, but without taking DaggerfallUnity.Settings.AllowMagicRepairs into account
+        public void LowerConditionWorkaround(int amount, DaggerfallEntity unequipFromOwner = null, ItemCollection removeFromCollectionWhenBreaks = null)
+        {
+            currentCondition -= amount;
+            if (currentCondition <= 0)
+            {
+                currentCondition = 0;
+                ItemBreaks(unequipFromOwner);
+                removeFromCollectionWhenBreaks.RemoveItem(this);
             }
         }
 
