@@ -54,11 +54,6 @@ namespace RepairTools
         // Depending on which Repair Tool was used, creates the appropriate list of items to display and be picked from.
         public override bool UseItem(ItemCollection collection)
         {
-            if (currentCondition == 0)
-            {
-                DaggerfallUI.MessageBox("The tool is broken and cannot be used.");
-                return true;
-            }
             if (GameManager.Instance.AreEnemiesNearby(true))
             {
                 DaggerfallUI.MessageBox("Can't use that with enemies around.");
@@ -135,7 +130,7 @@ namespace RepairTools
             itemToRepair.currentCondition = Mathf.Min(itemToRepair.currentCondition + repairAmount, maxRepairThresh);
 
             bool toolBroke = currentCondition <= DurabilityLoss;
-            LowerCondition(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
+            LowerConditionWorkaround(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
 
             // Force inventory window update
             DaggerfallUI.Instance.InventoryWindow.Refresh();
@@ -147,6 +142,18 @@ namespace RepairTools
 
             if (RepairTools.Instance.DebugLogs)
                 Debug.Log($"Skill: {playerSkill}, Target: {targetSkill}, Eff.: {repairEfficiency}");
+        }
+
+        // Like DaggerfallUnityItem's LowerCondition, but without taking DaggerfallUnity.Settings.AllowMagicRepairs into account
+        public void LowerConditionWorkaround(int amount, DaggerfallEntity unequipFromOwner = null, ItemCollection removeFromCollectionWhenBreaks = null)
+        {
+            currentCondition -= amount;
+            if (currentCondition <= 0)
+            {
+                currentCondition = 0;
+                ItemBreaks(unequipFromOwner);
+                removeFromCollectionWhenBreaks.RemoveItem(this);
+            }
         }
 
         // Creates the custom text-box after repairing an item.
