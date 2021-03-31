@@ -42,15 +42,7 @@ namespace RepairTools
         {
             DFCareer.Skills skill = item.GetWeaponSkillID();
 
-            if (RepairTools.restrictedMaterialsCheck)
-            {
-                return !item.IsEnchanted && !item.IsArtifact && item.NativeMaterialValue <= (int)WeaponMaterialTypes.Adamantium &&
-                (skill == DFCareer.Skills.ShortBlade || skill == DFCareer.Skills.LongBlade || skill == DFCareer.Skills.Axe);
-            }
-            else
-            {
-                return !item.IsEnchanted && !item.IsArtifact && (skill == DFCareer.Skills.ShortBlade || skill == DFCareer.Skills.LongBlade || skill == DFCareer.Skills.Axe);
-            }
+            return !item.IsEnchanted && !item.IsArtifact && (skill == DFCareer.Skills.ShortBlade || skill == DFCareer.Skills.LongBlade || skill == DFCareer.Skills.Axe);
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -94,28 +86,14 @@ namespace RepairTools
 
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
-            if (RepairTools.restrictedMaterialsCheck)
-            {
-                // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
-                return !item.IsEnchanted && !item.IsArtifact
-                    && (item.ItemGroup == ItemGroups.Armor
-                        && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Leather
-                        && item.NativeMaterialValue <= (int)ArmorMaterialTypes.Adamantium - 0x200
-                    || item.ItemGroup == ItemGroups.MensClothing
-                    || item.ItemGroup == ItemGroups.WomensClothing
-                    || item.TemplateIndex == 530);
-            }
-            else
-            {
-                // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
-                return !item.IsEnchanted && !item.IsArtifact
-                    && (item.ItemGroup == ItemGroups.Armor
-                        && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Leather
-                        && item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x200
-                    || item.ItemGroup == ItemGroups.MensClothing
-                    || item.ItemGroup == ItemGroups.WomensClothing
-                    || item.TemplateIndex == 530);
-            }
+            // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
+            return !item.IsEnchanted && !item.IsArtifact
+                && (item.ItemGroup == ItemGroups.Armor
+                    && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Leather
+                    && item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x200
+                || item.ItemGroup == ItemGroups.MensClothing
+                || item.ItemGroup == ItemGroups.WomensClothing
+                || item.TemplateIndex == 530);
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -159,15 +137,7 @@ namespace RepairTools
 
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
-            if (RepairTools.restrictedMaterialsCheck)
-            {
-                return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron &&
-                    !(item.NativeMaterialValue == (int)ArmorMaterialTypes.Ebony || item.NativeMaterialValue == (int)ArmorMaterialTypes.Orcish || item.NativeMaterialValue == (int)ArmorMaterialTypes.Daedric);
-            }
-            else
-            {
-                return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron;
-            }
+            return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron;
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -211,18 +181,9 @@ namespace RepairTools
 
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
-            if (RepairTools.restrictedMaterialsCheck)
-            {
-                // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
-                return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor &&
-                    item.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain && item.NativeMaterialValue <= (int)ArmorMaterialTypes.Adamantium - 0x100;
-            }
-            else
-            {
-                // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
-                return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain &&
-                    item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x100;
-            }
+            // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
+            return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain &&
+                item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x100;
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -268,15 +229,7 @@ namespace RepairTools
         {
             DFCareer.Skills skill = item.GetWeaponSkillID();
 
-            if (RepairTools.restrictedMaterialsCheck)
-            {
-                return !item.IsEnchanted && !item.IsArtifact && item.NativeMaterialValue <= (int)WeaponMaterialTypes.Adamantium &&
-                    (skill == DFCareer.Skills.BluntWeapon || skill == DFCareer.Skills.Archery);
-            }
-            else
-            {
-                return !item.IsEnchanted && !item.IsArtifact && (skill == DFCareer.Skills.BluntWeapon || skill == DFCareer.Skills.Archery);
-            }
+            return !item.IsEnchanted && !item.IsArtifact && (skill == DFCareer.Skills.BluntWeapon || skill == DFCareer.Skills.Archery);
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -320,15 +273,7 @@ namespace RepairTools
 
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
-            if (RepairTools.restrictedMaterialsCheck)
-            {
-                return item.IsEnchanted && !item.IsArtifact && !(item.NativeMaterialValue <= 9 && item.NativeMaterialValue >= 7 || item.NativeMaterialValue <= 521 && item.NativeMaterialValue >= 519) &&
-                    !(item.TemplateIndex <= 519 && item.TemplateIndex >= 515 && (int)item.dyeColor == 25 || (int)item.dyeColor == 24 || (int)item.dyeColor == 23);
-            }
-            else
-            {
-                return item.IsEnchanted;
-            }
+            return item.IsEnchanted;
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)

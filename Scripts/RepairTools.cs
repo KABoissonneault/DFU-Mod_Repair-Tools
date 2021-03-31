@@ -8,6 +8,8 @@
 // Special Thanks:  Hazelnut and Ralzar
 // Modifier:		Hazelnut	
 
+using System.Linq;
+
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Items;
@@ -29,13 +31,14 @@ namespace RepairTools
         }
 
         static Mod mod;
-        public static bool restrictedMaterialsCheck { get; set; }
 
-        public static GameObject ExampleGo;
-        public static Mod myMod;
-        public static AudioSource audioSource;
+        public static Mod Mod { get { return mod; } }
 
-        //public const string audioClips = "Zero Gravity 1.ogg";
+        bool debugLogs;
+        public AudioSource audioSource;
+
+        public bool DebugLogs { get { return debugLogs; } }
+        public AudioSource AudioSource {  get { return audioSource; } }
 
         //list of audio clip assets bundled in mod
         public static readonly List<string> audioClips = new List<string>()
@@ -51,24 +54,32 @@ namespace RepairTools
         void Start()
         {
             RepairToolsConsoleCommands.RegisterCommands();
-
-            //get reference to mod object.  
-            myMod = mod;
-
-            //Can also get this using ModManager, using modtitle or index
-            // myMod = ModManager.Instance.GetMod(modtitle);
-
-            if (audioSource == null)
-                audioSource = this.GetComponent<AudioSource>();
         }
 
         [Invoke(StateManager.StateTypes.Start, 0)]
         public static void Init(InitParams initParams)
         {
             mod = initParams.Mod;
-            instance = new GameObject("RepairTools").AddComponent<RepairTools>(); // Add script to the scene.
             var go = new GameObject("RepairTools");
-            go.AddComponent<RepairTools>();
+            instance = go.AddComponent<RepairTools>(); // Add script to the scene.
+            instance.audioSource = go.AddComponent<AudioSource>();
+        }
+
+        void Awake()
+        {
+            ModSettings settings = mod.GetSettings();
+            debugLogs = settings.GetBool("Core", "DebugLogs");
+
+            InitMod();
+
+            mod.IsReady = true;
+        }
+
+        #region InitMod and Settings
+
+        private static void InitMod()
+        {
+            Debug.Log("Begin mod init: RepairTools");
 
             ItemHelper itemHelper = DaggerfallUnity.Instance.ItemHelper;
 
@@ -78,100 +89,79 @@ namespace RepairTools
             itemHelper.RegisterCustomItem(ItemJewelersPliers.templateIndex, ItemGroups.UselessItems2, typeof(ItemJewelersPliers));
             itemHelper.RegisterCustomItem(ItemEpoxyGlue.templateIndex, ItemGroups.UselessItems2, typeof(ItemEpoxyGlue));
             itemHelper.RegisterCustomItem(ItemChargingPowder.templateIndex, ItemGroups.UselessItems2, typeof(ItemChargingPowder));
-        }
-
-        [Invoke(StateManager.StateTypes.Game)]
-        public static void InitAtGameState(InitParams initParams)
-        {
-            if (ExampleGo != null)
-                return;
-            //Get a clone of the example gameobject prefab from mod
-            ExampleGo = mod.GetAsset<GameObject>("Example.prefab", true);
-
-            //add the audio player script to it
-            ExampleGo.AddComponent<RepairTools>();
-        }
-
-        void Awake()
-        {
-            ModSettings settings = mod.GetSettings();
-            bool restrictedMaterials = settings.GetBool("Modules", "restrictedMaterials");
-
-            InitMod(restrictedMaterials);
-
-            mod.IsReady = true;
-        }
-
-        #region InitMod and Settings
-
-        private static void InitMod(bool restrictedMaterials)
-        {
-            Debug.Log("Begin mod init: RepairTools");
-
-            if (restrictedMaterials)
-            {
-                Debug.Log("RepairTools: Restricted Materials Module Active");
-                restrictedMaterialsCheck = true;
-            }
-            else
-            {
-                restrictedMaterialsCheck = false;
-                Debug.Log("RepairTools: Restricted Materials Module Disabled");
-            }
 
             Debug.Log("Finished mod init: RepairTools");
         }
 
         #endregion
 
-        #region Console Command Specific Methods
-
-        public static void DamageEquipmentCommand()
+        #region Formulas
+        public static int GetEffectiveRepairSkill(PlayerEntity playerEntity)
         {
-            PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
-
-            for (int i = 0; i < playerEntity.Items.Count; i++)
-            {
-                DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
-                int percentReduce = (int)Mathf.Ceil(item.maxCondition * 0.10f);
-                item.LowerCondition(percentReduce);
-            }
+            int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
+            int agiMod = (int)Mathf.Round((playerEntity.Stats.LiveAgility - 50f) / 10);
+            int backgroundMod = playerEntity.Career.Name == "Knight" ? 6 : 0; // knights get +6 because of their backstory
+            return Mathf.Clamp(playerEntity.Level * 5, 5, 100) + luckMod + agiMod + backgroundMod;
         }
 
-        public static void RepairEquipmentCommand()
+        public static int GetSkillTarget(DaggerfallUnityItem item)
         {
-            PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
-
-            for (int i = 0; i < playerEntity.Items.Count; i++)
+            if(item.ItemGroup == ItemGroups.Weapons)
             {
-                DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
-
-                int percentIncrease = (int)Mathf.Ceil(item.maxCondition * 0.10f);
-                int repairAmount = (int)Mathf.Ceil(item.maxCondition * (percentIncrease / 100f));
-                if (item.currentCondition + repairAmount > item.maxCondition) // Checks if amount about to be repaired would go over the item's maximum allowed condition threshold.
-                {   // If true, repair amount will instead set the item's current condition to the defined maximum threshold.
-                    item.currentCondition = item.maxCondition;
+                return (item.NativeMaterialValue + 1) * 10;
+            }
+            else if(item.ItemGroup == ItemGroups.Armor)
+            {
+                if(item.NativeMaterialValue < (int)ArmorMaterialTypes.Chain)
+                {
+                    // Leather armor
+                    return (item.NativeMaterialValue + 1) * 10;
+                }
+                else if(item.NativeMaterialValue < (int)ArmorMaterialTypes.Iron)
+                {
+                    // Chain armor
+                    return (item.NativeMaterialValue - (int)ArmorMaterialTypes.Chain + 1) * 10;
                 }
                 else
-                {   // Does the actual repair, by adding condition damage to the current item's current condition value.
-                    item.currentCondition += repairAmount;
+                {
+                    // Plate
+                    return (item.NativeMaterialValue - (int)ArmorMaterialTypes.Iron + 1) * 10;
                 }
+            }
+            else
+            {
+                return 10;
             }
         }
 
-        public static void EmptyInventoryCommand() // Does not work flawlessly, requires a few runs of the command it seems, but at least it's something I suppose.
+        // Returns a value between 20 and 100% (exclusive)
+        // At 5 under target, you get 40%
+        // On target, you get 60%
+        // At 5 above target, you get 80%
+        public static int MaxConditionPercent(int effectiveSkill, int targetSkill)
         {
-            PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
-            ItemCollection itemCollection = playerEntity.Items;
+            const float a = 80f / Mathf.PI;
+            const float b = 60f;
+            const float c = 5f;
 
-            for (int i = 0; i < playerEntity.Items.Count; i++)
-            {
-                DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
-                itemCollection.RemoveItem(item);
-            }
+            int diff = Mathf.Max(effectiveSkill - targetSkill, -10);
+            float r = a * Mathf.Atan(diff / c) + b;
+            return (int)Mathf.Round(r);
+        }
 
-            // Force inventory window update
-            DaggerfallUI.Instance.InventoryWindow.Refresh();
+        // Returns a value between 0.5 and 1.5 (exclusive)
+        // At 5 under target, you get 0.75
+        // On target, you get 1
+        // At 5 above target, you get 1.25
+        public static int RepairEfficiencyRatio(int effectiveSkill, int targetSkill)
+        {
+            const float a = 1f / Mathf.PI;
+            const float b = 1f;
+            const float c = 5f;
+
+            int diff = Mathf.Max(effectiveSkill - targetSkill, -10);
+            float r = a * Mathf.Atan(diff / c) + b;
+            return (int)Mathf.Round(r);
         }
 
         #endregion

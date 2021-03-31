@@ -9,14 +9,25 @@
 // Modifier:		Hazelnut	
 
 using System;
+using System.Linq;
 using UnityEngine;
 using Wenzil.Console;
+using DaggerfallWorkshop.Game;
+using DaggerfallWorkshop.Game.Entity;
+using DaggerfallWorkshop.Game.Items;
 
 namespace RepairTools
 {
     public static class RepairToolsConsoleCommands
     {
-        const string noInstanceMessage = "Repair Tools instance not found.";
+        static int[] ToolTemplateIndices = {
+            ItemWhetstone.templateIndex,
+            ItemSewingKit.templateIndex,
+            ItemArmorersHammer.templateIndex,
+            ItemJewelersPliers.templateIndex,
+            ItemEpoxyGlue.templateIndex,
+            ItemChargingPowder.templateIndex
+        };
 
         public static void RegisterCommands()
         {
@@ -25,6 +36,7 @@ namespace RepairTools
                 ConsoleCommandsDatabase.RegisterCommand(DamageEquipment.name, DamageEquipment.description, DamageEquipment.usage, DamageEquipment.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(RepairEquipment.name, RepairEquipment.description, RepairEquipment.usage, RepairEquipment.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(ClearInventory.name, ClearInventory.description, ClearInventory.usage, ClearInventory.Execute);
+                ConsoleCommandsDatabase.RegisterCommand(AddRepairTools.name, AddRepairTools.description, AddRepairTools.usage, AddRepairTools.Execute);
             }
             catch (Exception e)
             {
@@ -40,13 +52,21 @@ namespace RepairTools
 
             public static string Execute(params string[] args)
             {
-                var randomStartingDungeon = RepairTools.Instance;
-                if (randomStartingDungeon == null)
-                    return noInstanceMessage;
+                PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
 
-                RepairTools.DamageEquipmentCommand();
+                for (int i = 0; i < playerEntity.Items.Count; i++)
+                {
+                    DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
 
-                return "All Items Damaged By 10%...";
+                    // Don't damage our repair tools, this is just annoying
+                    if (ToolTemplateIndices.Contains(item.TemplateIndex))
+                        continue;
+
+                    int percentReduce = (int)Mathf.Ceil(item.maxCondition * 0.10f);
+                    item.LowerCondition(percentReduce);
+                }
+
+                return "All items damaged by 10%";
             }
         }
 
@@ -58,13 +78,19 @@ namespace RepairTools
 
             public static string Execute(params string[] args)
             {
-                var randomStartingDungeon = RepairTools.Instance;
-                if (randomStartingDungeon == null)
-                    return noInstanceMessage;
+                PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
 
-                RepairTools.RepairEquipmentCommand();
+                for (int i = 0; i < playerEntity.Items.Count; i++)
+                {
+                    DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
 
-                return "All Items Repaired By 10%...";
+                    int percentIncrease = (int)Mathf.Ceil(item.maxCondition * 0.10f);
+                    int repairAmount = (int)Mathf.Ceil(item.maxCondition * (percentIncrease / 100f));
+
+                    item.currentCondition = Mathf.Min(item.currentCondition + repairAmount, item.maxCondition);
+                }
+
+                return "All items repaired by 10%";
             }
         }
 
@@ -76,13 +102,37 @@ namespace RepairTools
 
             public static string Execute(params string[] args)
             {
-                var randomStartingDungeon = RepairTools.Instance;
-                if (randomStartingDungeon == null)
-                    return noInstanceMessage;
+                PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
+                ItemCollection itemCollection = playerEntity.Items;
 
-                RepairTools.EmptyInventoryCommand();
+                for (int i = 0; i < playerEntity.Items.Count; i++)
+                {
+                    DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
+                    itemCollection.RemoveItem(item);
+                }
 
-                return "Inventory Has Been Cleared...";
+                // Force inventory window update
+                DaggerfallUI.Instance.InventoryWindow.Refresh();
+
+                return "Inventory has been cleared";
+            }
+        }
+
+        private static class AddRepairTools
+        {
+            public static readonly string name = "add_repairtools";
+            public static readonly string description = "Adds one of each repair tool to the player's inventory";
+            public static readonly string usage = "ADD_REPAIRTOOLS";
+
+            public static string Execute(params string[] args)
+            {
+                foreach (int templateIndex in ToolTemplateIndices)
+                {
+                    DaggerfallUnityItem item = ItemBuilder.CreateItem(ItemGroups.UselessItems2, templateIndex);
+                    GameManager.Instance.PlayerEntity.Items.AddItem(item);
+                }
+
+                return "Repair tools have been added";
             }
         }
     }

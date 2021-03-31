@@ -76,19 +76,20 @@ namespace RepairTools
             DaggerfallListPickerWindow validItemPicker = new DaggerfallListPickerWindow(uiManager, uiManager.TopWindow);
             validItemPicker.OnItemPicked += RepairItem_OnItemPicked;
             validRepairItems.Clear(); // Clears the valid item list before every repair tool use.
-            int itemCount = playerEntity.Items.Count;
-            int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
-            int endurMod = (int)Mathf.Round((playerEntity.Stats.LiveEndurance - 50f) / 10);
+
+            int playerSkill = RepairTools.GetEffectiveRepairSkill(playerEntity);
 
             for (int i = 0; i < playerEntity.Items.Count; i++)
             {
                 DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
-				//int percentReduce = (int)Mathf.Floor(item.maxCondition * 0.15f); // For Testing Purposes right now.
-                //item.LowerCondition(percentReduce); // For Testing Purposes right now.
-                if (item.ConditionPercentage < 80 && IsValidForRepair(item))
+
+                int targetSkill = RepairTools.GetSkillTarget(item);
+                int maxPercentage = RepairTools.MaxConditionPercent(playerSkill, targetSkill);
+
+                if (item.ConditionPercentage < maxPercentage && IsValidForRepair(item))
                 {
                     validRepairItems.Add(item);
-                    string validItemName = item.ConditionPercentage + "%" + "      " + item.LongName;
+                    string validItemName = $"{item.ConditionPercentage} / {maxPercentage} %  {item.LongName}";
                     validItemPicker.ListBox.AddItem(validItemName);
                 }
             }
@@ -96,7 +97,7 @@ namespace RepairTools
             if (validItemPicker.ListBox.Count > 0)
                 uiManager.PushWindow(validItemPicker);
             else
-                DaggerfallUI.MessageBox("You have no valid items in need of repair.");
+                DaggerfallUI.MessageBox("You have no such items in need of repair.");
 
             return true;
         }
@@ -112,38 +113,40 @@ namespace RepairTools
             if (itemToRepair.currentCondition <= 0)
             {
                 ShowCustomTextBox(false, itemToRepair, true); // Shows the specific text-box when trying to repair a completely broken item.
+                return;
             }
-            else
-            {
-                int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
-                int endurMod = (int)Mathf.Round((playerEntity.Stats.LiveEndurance - 50f) / 10);
-                int speedMod = (int)Mathf.Round((playerEntity.Stats.LiveSpeed - 50f) / 10);
-                int agiliMod = (int)Mathf.Round((playerEntity.Stats.LiveAgility - 50f) / 10);
-                int maxRepairThresh = (int)Mathf.Ceil(itemToRepair.maxCondition * (80 / 100f));
-                int repairPercentage = GetRepairPercentage(luckMod, itemToRepair);
-                int staminaDrainValue = GetStaminaDrain(endurMod);
-                int TimeDrainValue = GetTimeDrain(speedMod, agiliMod);
 
-                int repairAmount = (int)Mathf.Ceil(itemToRepair.maxCondition * (repairPercentage / 100f));
-                if (itemToRepair.currentCondition + repairAmount > maxRepairThresh) // Checks if amount about to be repaired would go over the item's maximum allowed condition threshold.
-                {   // If true, repair amount will instead set the item's current condition to the defined maximum threshold.
-                    itemToRepair.currentCondition = maxRepairThresh;
-                }
-                else
-                {   // Does the actual repair, by adding condition damage to the current item's current condition value.
-                    itemToRepair.currentCondition += repairAmount;
-                }
-                bool toolBroke = currentCondition <= DurabilityLoss;
-                LowerCondition(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
+            int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
+            int endurMod = (int)Mathf.Round((playerEntity.Stats.LiveEndurance - 50f) / 10);
+            int speedMod = (int)Mathf.Round((playerEntity.Stats.LiveSpeed - 50f) / 10);
+            int agiliMod = (int)Mathf.Round((playerEntity.Stats.LiveAgility - 50f) / 10);
 
-                // Force inventory window update
-                DaggerfallUI.Instance.InventoryWindow.Refresh();
+            int playerSkill = RepairTools.GetEffectiveRepairSkill(playerEntity);
+            int targetSkill = RepairTools.GetSkillTarget(itemToRepair);
+            int maxPercentage = RepairTools.MaxConditionPercent(playerSkill, targetSkill);
+            float repairEfficiency = RepairTools.RepairEfficiencyRatio(playerSkill, targetSkill);
 
-                PlayAudioTrack(); // Plays the appropriate sound effect for a specific repair tool.
-                playerEntity.DecreaseFatigue(staminaDrainValue, true); // Reduce player current stamina value from the action of repairing.
-                DaggerfallUnity.Instance.WorldTime.Now.RaiseTime(TimeDrainValue); // Forwards time by an amount of minutes in-game time.
-                ShowCustomTextBox(toolBroke, itemToRepair, false); // Shows the specific text-box after repairing an item.
-            }
+            int maxRepairThresh = (int)Mathf.Round(itemToRepair.maxCondition * (maxPercentage / 100f));
+            float repairPercentage = GetRepairPercentage(luckMod, itemToRepair) * repairEfficiency;
+            int staminaDrainValue = (int)(GetStaminaDrain(endurMod) / repairEfficiency);
+            int TimeDrainValue = (int)(GetTimeDrain(speedMod, agiliMod) / repairEfficiency);
+
+            int repairAmount = (int)Mathf.Round(itemToRepair.maxCondition * (repairPercentage / 100f));
+            itemToRepair.currentCondition = Mathf.Min(itemToRepair.currentCondition + repairAmount, maxRepairThresh);
+
+            bool toolBroke = currentCondition <= DurabilityLoss;
+            LowerCondition(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
+
+            // Force inventory window update
+            DaggerfallUI.Instance.InventoryWindow.Refresh();
+
+            PlayAudioTrack(); // Plays the appropriate sound effect for a specific repair tool.
+            playerEntity.DecreaseFatigue(staminaDrainValue, true); // Reduce player current stamina value from the action of repairing.
+            DaggerfallUnity.Instance.WorldTime.Now.RaiseTime(TimeDrainValue); // Forwards time by an amount of minutes in-game time.
+            ShowCustomTextBox(toolBroke, itemToRepair, false); // Shows the specific text-box after repairing an item.
+
+            if (RepairTools.Instance.DebugLogs)
+                Debug.Log($"Skill: {playerSkill}, Target: {targetSkill}, Eff.: {repairEfficiency}");
         }
 
         // Creates the custom text-box after repairing an item.
@@ -173,9 +176,8 @@ namespace RepairTools
         // Find the appropriate audio track of the used repair tool, then plays a one-shot of it.
         public void PlayAudioTrack()
         {
-            AudioClip clip = RepairTools.myMod.GetAsset<AudioClip>(RepairTools.audioClips[GetAudioClipNum()]);
-            RepairTools.audioSource.PlayOneShot(clip);
+            AudioClip clip = RepairTools.Mod.GetAsset<AudioClip>(RepairTools.audioClips[GetAudioClipNum()]);
+            RepairTools.Instance.AudioSource.PlayOneShot(clip);
         }
-
     }
 }

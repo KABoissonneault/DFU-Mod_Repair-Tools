@@ -8,7 +8,6 @@
     "GUID": "968f2200-a351-4052-b9d5-4ee499a2b6bb",
     "Files": [
         "Assets/Game/Mods/RepairTools/modsettings.json",
-        "Assets/Game/Mods/RepairTools/Example.prefab",
         "Assets/Game/Mods/RepairTools/ItemTemplates.json",
         "Assets/Game/Mods/RepairTools/Textures/805_0-0.png",
         "Assets/Game/Mods/RepairTools/Textures/800_0-0.png",

@@ -2,18 +2,25 @@
     "Version": "1.0",
     "Sections": [
         {
-            "Name": "Modules",
-            "Description": "Enable or disable the optional modules contained in this mod",
+            "Name": "Core",
+            "Description": "Main settings",
             "IsAdvanced": false,
             "Keys": [
                 {
-                    "Value": true,
-                    "Name": "restrictedMaterials",
-                    "Description": "For disallowing Artifacts, Ebony, Orcish, and Daedric items to be repaired. || Default = True",
+                    "Value": false,
+                    "Name": "DebugLogs",
+                    "Description": "Enable the debug logs",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
                 }
             ],
+            "$version": "v1"
+        },
+        {
+            "Name": "Modules",
+            "Description": "Enable or disable the optional modules contained in this mod",
+            "IsAdvanced": false,
+            "Keys": [],
             "$version": "v1"
         }
     ]
