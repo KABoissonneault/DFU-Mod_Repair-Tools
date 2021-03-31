@@ -54,11 +54,6 @@ namespace RepairTools
         // Depending on which Repair Tool was used, creates the appropriate list of items to display and be picked from.
         public override bool UseItem(ItemCollection collection)
         {
-            if (currentCondition == 0)
-            {
-                DaggerfallUI.MessageBox("The tool is broken and cannot be used.");
-                return true;
-            }
             if (GameManager.Instance.AreEnemiesNearby(true))
             {
                 DaggerfallUI.MessageBox("Can't use that with enemies around.");
