@@ -25,9 +25,9 @@ namespace RepairTools
     /// </summary>
     public abstract class AbstractItemRepairTools : DaggerfallUnityItem
     {
-        UserInterfaceManager uiManager = DaggerfallUI.Instance.UserInterfaceManager;
-        List<DaggerfallUnityItem> validRepairItems = new List<DaggerfallUnityItem>();
-        ItemCollection repairItemCollection;
+        protected List<DaggerfallUnityItem> validRepairItems = new List<DaggerfallUnityItem>();
+        protected readonly UserInterfaceManager uiManager = DaggerfallUI.Instance.UserInterfaceManager;
+        protected ItemCollection repairItemCollection;
 
         public AbstractItemRepairTools(ItemGroups itemGroup, int templateIndex) : base(itemGroup, templateIndex)
         {

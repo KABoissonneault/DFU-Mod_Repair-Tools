@@ -1,11 +1,11 @@
 {
-    "ModTitle": "RepairTools",
-    "ModVersion": "1.09",
-    "ModAuthor": "Kirk.O",
-    "ContactInfo": "kirkoliveri@gmail.com",
-    "DFUnity_Version": "0.11.1",
-    "ModDescription": "Adds Repair Items To Fix Item Condition In The Field",
-    "GUID": "968f2200-a351-4052-b9d5-4ee499a2b6bb",
+    "ModTitle": "Greater Condition",
+    "ModVersion": "1.0",
+    "ModAuthor": "Kab the Bird Ranger",
+    "ContactInfo": "kaboissonneault@gmail.com",
+    "DFUnity_Version": "0.11.2",
+    "ModDescription": "Overhauls item condition, including repair tools and a charge meter for magic items",
+    "GUID": "8be83ad5-d9b4-4f9f-8e59-7a4a5fe2a244",
     "Files": [
         "Assets/Game/Mods/RepairTools/modsettings.json",
         "Assets/Game/Mods/RepairTools/ItemTemplates.json",
@@ -25,6 +25,10 @@
         "Assets/Game/Mods/RepairTools/Scripts/ItemsRepairTools.cs",
         "Assets/Game/Mods/RepairTools/Scripts/RepairTools.cs",
         "Assets/Game/Mods/RepairTools/Scripts/RTTextTokenHolder.cs",
-        "Assets/Game/Mods/RepairTools/Scripts/RepairToolsConsoleCommands.cs"
+        "Assets/Game/Mods/RepairTools/Scripts/RepairToolsConsoleCommands.cs",
+        "Assets/Game/Mods/RepairTools/Scripts/Effects/RepairToolsCastWhenHeld.cs",
+        "Assets/Game/Mods/RepairTools/Scripts/Effects/RepairToolsCastWhenStrikes.cs",
+        "Assets/Game/Mods/RepairTools/Scripts/Effects/RepairToolsCastWhenUsed.cs",
+        "Assets/Game/Mods/RepairTools/Scripts/UserInterfaceWindows/RepairToolsInventoryWindow.cs"
     ]
 }

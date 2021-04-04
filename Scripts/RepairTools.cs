@@ -8,26 +8,57 @@
 // Special Thanks:  Hazelnut and Ralzar
 // Modifier:		Hazelnut	
 
+using System;
 using System.Linq;
+using System.Collections.Generic;
+
+using UnityEngine;
 
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.Utility.ModSupport;
-using UnityEngine;
-using System.Collections.Generic;
 using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
 using DaggerfallWorkshop.Game.Entity;
+using DaggerfallWorkshop.Game.UserInterfaceWindows;
 
 namespace RepairTools
 {
-    public class RepairTools : MonoBehaviour
+    public class ItemProperties
+    {
+        public int CurrentCharge { get; set; }
+        public int MaxCharge { get; set; }
+
+        public bool IsDefault()
+        {
+            return CurrentCharge == 0 && MaxCharge == 0;
+        }
+    }
+
+    [FullSerializer.fsObject("v1")]
+    public class RepairToolsSaveData
+    {
+        public List<KeyValuePair<ulong, ItemProperties>> ItemList;
+
+        public RepairToolsSaveData(IEnumerable<KeyValuePair<ulong, ItemProperties>> items)
+        {
+            // Filter out items the player doesn't have anymore
+            items = items.Where(
+                kvp => RepairTools.PlayerItemExists(kvp.Key)
+                && !kvp.Value.IsDefault()
+                );
+
+            ItemList = new List<KeyValuePair<ulong, ItemProperties>>(items);
+        }
+    }
+
+    public class RepairTools : MonoBehaviour, IHasModSaveData
     {
         static RepairTools instance;
 
         public static RepairTools Instance
         {
-            get { return instance ?? (instance = FindObjectOfType<RepairTools>()); }
+            get { return instance; }
         }
 
         static Mod mod;
@@ -36,9 +67,62 @@ namespace RepairTools
 
         bool debugLogs;
         public AudioSource audioSource;
+        Dictionary<ulong, ItemProperties> itemProperties = new Dictionary<ulong, ItemProperties>();
 
         public bool DebugLogs { get { return debugLogs; } }
         public AudioSource AudioSource {  get { return audioSource; } }
+
+        #region Item Properties
+
+        void InitializeProperties(ItemProperties props, DaggerfallUnityItem item)
+        {
+            if (!item.IsEnchanted)
+                return;
+
+            props.MaxCharge = item.ItemTemplate­.hitPoints;
+            props.CurrentCharge = props.MaxCharge;
+        }
+
+        public ItemProperties GetItemProperties(DaggerfallUnityItem item)
+        {
+            ItemProperties props;
+            if (itemProperties.TryGetValue(item.UID, out props))
+                return props;
+
+            props = new ItemProperties();
+            InitializeProperties(props, item);
+            itemProperties.Add(item.UID, props);
+            return props;
+        }
+
+        static bool FindInCollection(ulong uid, ItemCollection collection, out DaggerfallUnityItem item)
+        {
+            item = collection.GetItem(uid);
+            return item != null;
+        }
+
+        static bool FindInRange(ulong uid, IEnumerable<DaggerfallUnityItem> collection, out DaggerfallUnityItem item)
+        {
+            item = collection.FirstOrDefault(i => i.UID == uid);
+            return item != null;
+        }
+
+        public static bool FindPlayerItem(ulong uid, out DaggerfallUnityItem item)
+        {
+            var playerEntity = GameManager.Instance.PlayerEntity;
+            return FindInCollection(uid, playerEntity.Items, out item)
+                || FindInRange(uid, playerEntity.ItemEquipTable.EquipTable, out item)
+                || FindInCollection(uid, playerEntity.WagonItems, out item)
+                || FindInCollection(uid, playerEntity.OtherItems, out item);
+        }
+
+        public static bool PlayerItemExists(ulong uid)
+        {
+            DaggerfallUnityItem dummy;
+            return FindPlayerItem(uid, out dummy);
+        }
+
+        #endregion
 
         //list of audio clip assets bundled in mod
         public static readonly List<string> audioClips = new List<string>()
@@ -60,9 +144,11 @@ namespace RepairTools
         public static void Init(InitParams initParams)
         {
             mod = initParams.Mod;
-            var go = new GameObject("RepairTools");
+            var go = new GameObject("GreaterCondition");
             instance = go.AddComponent<RepairTools>(); // Add script to the scene.
             instance.audioSource = go.AddComponent<AudioSource>();
+
+            mod.SaveDataInterface = instance;
         }
 
         void Awake()
@@ -79,7 +165,7 @@ namespace RepairTools
 
         private static void InitMod()
         {
-            Debug.Log("Begin mod init: RepairTools");
+            Debug.Log("Begin mod init: Greater Condition");
 
             ItemHelper itemHelper = DaggerfallUnity.Instance.ItemHelper;
 
@@ -90,7 +176,15 @@ namespace RepairTools
             itemHelper.RegisterCustomItem(ItemEpoxyGlue.templateIndex, ItemGroups.UselessItems2, typeof(ItemEpoxyGlue));
             itemHelper.RegisterCustomItem(ItemChargingPowder.templateIndex, ItemGroups.UselessItems2, typeof(ItemChargingPowder));
 
-            Debug.Log("Finished mod init: RepairTools");
+            // Replace CastWhenHeld, CastWhenStrikes, and CastWhenUsed item effects to use magic charge instead of durability
+            GameManager.Instance.EntityEffectBroker.RegisterEffectTemplate(new RepairToolsCastWhenHeld(), true);
+            GameManager.Instance.EntityEffectBroker.RegisterEffectTemplate(new RepairToolsCastWhenStrikes(), true);
+            GameManager.Instance.EntityEffectBroker.RegisterEffectTemplate(new RepairToolsCastWhenUsed(), true);
+
+            // Custom windows
+            UIWindowFactory.RegisterCustomUIWindow(UIWindowType.Inventory, typeof(RepairToolsInventoryWindow));
+
+            Debug.Log("Finished mod init: Greater Condition");
         }
 
         #endregion
@@ -164,6 +258,45 @@ namespace RepairTools
             return (int)Mathf.Round(r);
         }
 
+        #endregion
+
+        #region Save Data
+        public Type SaveDataType { get { return typeof(RepairToolsSaveData); } }
+
+        public object NewSaveData()
+        {
+            return new RepairToolsSaveData(Enumerable.Empty<KeyValuePair<ulong, ItemProperties>>());
+        }
+
+        public object GetSaveData()
+        {
+            return new RepairToolsSaveData(itemProperties);
+        }
+
+        public void RestoreSaveData(object saveData)
+        {
+            var repairToolsSaveData = (RepairToolsSaveData)saveData;
+            if (repairToolsSaveData.ItemList == null || repairToolsSaveData.ItemList.Count() == 0)
+            {
+                itemProperties = new Dictionary<ulong, ItemProperties>();
+            }
+            else
+            {
+                itemProperties = repairToolsSaveData.ItemList.ToDictionary(x => x.Key, x => x.Value);
+            }
+        }
+        #endregion
+
+        #region Utils
+        public static bool IsTraveling()
+        {
+            if (GameManager.Instance.EntityEffectBroker.SyntheticTimeIncrease)
+                return true;
+
+            bool isTraveling = false;
+            ModManager.Instance.SendModMessage("TravelOptions", "isTravelActive", null, (string _, object data) => isTraveling = (bool)data);
+            return isTraveling;
+        }
         #endregion
 
     }

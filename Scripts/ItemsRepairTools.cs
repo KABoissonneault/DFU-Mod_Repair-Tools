@@ -9,8 +9,12 @@
 // Modifier:		Hazelnut
 
 using UnityEngine;
+using DaggerfallWorkshop;
+using DaggerfallWorkshop.Game;
+using DaggerfallWorkshop.Game.Entity;
 using DaggerfallWorkshop.Game.Items;
 using DaggerfallWorkshop.Game.Serialization;
+using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using DaggerfallConnect;
 
 namespace RepairTools
@@ -42,7 +46,7 @@ namespace RepairTools
         {
             DFCareer.Skills skill = item.GetWeaponSkillID();
 
-            return !item.IsEnchanted && !item.IsArtifact && (skill == DFCareer.Skills.ShortBlade || skill == DFCareer.Skills.LongBlade || skill == DFCareer.Skills.Axe);
+            return (skill == DFCareer.Skills.ShortBlade || skill == DFCareer.Skills.LongBlade || skill == DFCareer.Skills.Axe);
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -87,8 +91,7 @@ namespace RepairTools
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
-            return !item.IsEnchanted && !item.IsArtifact
-                && (item.ItemGroup == ItemGroups.Armor
+            return (item.ItemGroup == ItemGroups.Armor
                     && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Leather
                     && item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x200
                 || item.ItemGroup == ItemGroups.MensClothing
@@ -137,7 +140,7 @@ namespace RepairTools
 
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
-            return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron;
+            return item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron;
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -182,7 +185,7 @@ namespace RepairTools
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
-            return !item.IsEnchanted && !item.IsArtifact && item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain &&
+            return item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Chain &&
                 item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x100;
         }
 
@@ -229,7 +232,7 @@ namespace RepairTools
         {
             DFCareer.Skills skill = item.GetWeaponSkillID();
 
-            return !item.IsEnchanted && !item.IsArtifact && (skill == DFCareer.Skills.BluntWeapon || skill == DFCareer.Skills.Archery);
+            return (skill == DFCareer.Skills.BluntWeapon || skill == DFCareer.Skills.Archery);
         }
 
         public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
@@ -338,6 +341,79 @@ namespace RepairTools
             return 1f;
         }
 
+        public override bool UseItem(ItemCollection collection)
+        {
+            if (GameManager.Instance.AreEnemiesNearby(true))
+            {
+                DaggerfallUI.MessageBox("Can't use that with enemies around.");
+                return true;
+            }
+            PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
+            if (playerEntity.CurrentFatigue <= (20 * DaggerfallEntity.FatigueMultiplier))
+            {
+                DaggerfallUI.MessageBox("You are too exhausted to do that.");
+                return true;
+            }
+
+            repairItemCollection = collection;
+
+            DaggerfallListPickerWindow validItemPicker = new DaggerfallListPickerWindow(uiManager, uiManager.TopWindow);
+            validItemPicker.OnItemPicked += RepairItem_OnItemPicked;
+            validRepairItems.Clear(); // Clears the valid item list before every repair tool use.
+
+            for (int i = 0; i < playerEntity.Items.Count; i++)
+            {
+                DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
+                ItemProperties props = RepairTools.Instance.GetItemProperties(item);
+
+                if (props.CurrentCharge != props.MaxCharge && IsValidForRepair(item))
+                {
+                    validRepairItems.Add(item);
+                    string validItemName = $"{props.CurrentCharge} / {props.MaxCharge}  {item.LongName}";
+                    validItemPicker.ListBox.AddItem(validItemName);
+                }
+            }
+
+            if (validItemPicker.ListBox.Count > 0)
+                uiManager.PushWindow(validItemPicker);
+            else
+                DaggerfallUI.MessageBox("You have no such items in need of repair.");
+
+            return true;
+        }
+
+        // Method for calculations and work after a list item has been selected.
+        new void RepairItem_OnItemPicked(int index, string itemName)
+        {
+            DaggerfallUI.Instance.PlayOneShot(SoundClips.ButtonClick);
+            DaggerfallUI.UIManager.PopWindow();
+            PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
+            DaggerfallUnityItem itemToRepair = validRepairItems[index]; // Gets the item object associated with what was selected in the list window.
+            ItemProperties props = RepairTools.Instance.GetItemProperties(itemToRepair);
+
+            int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
+            int endurMod = (int)Mathf.Round((playerEntity.Stats.LiveEndurance - 50f) / 10);
+            int speedMod = (int)Mathf.Round((playerEntity.Stats.LiveSpeed - 50f) / 10);
+            int agiliMod = (int)Mathf.Round((playerEntity.Stats.LiveAgility - 50f) / 10);
+
+            float rechargePercentage = GetRepairPercentage(luckMod, itemToRepair);
+            int staminaDrainValue = GetStaminaDrain(endurMod);
+            int TimeDrainValue = GetTimeDrain(speedMod, agiliMod);
+
+            int rechargeAmount = (int)Mathf.Round(props.MaxCharge * (rechargePercentage / 100f));
+            props.CurrentCharge = Mathf.Min(props.CurrentCharge + rechargeAmount, props.MaxCharge);
+
+            bool toolBroke = currentCondition <= DurabilityLoss;
+            LowerConditionWorkaround(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
+
+            // Force inventory window update
+            DaggerfallUI.Instance.InventoryWindow.Refresh();
+
+            PlayAudioTrack(); // Plays the appropriate sound effect for a specific repair tool.
+            playerEntity.DecreaseFatigue(staminaDrainValue, true); // Reduce player current stamina value from the action of repairing.
+            DaggerfallUnity.Instance.WorldTime.Now.RaiseTime(TimeDrainValue); // Forwards time by an amount of minutes in-game time.
+            ShowCustomTextBox(toolBroke, itemToRepair, false); // Shows the specific text-box after repairing an item.
+        }
     }
 }
 
