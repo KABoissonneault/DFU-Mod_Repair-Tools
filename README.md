@@ -1,5 +1,5 @@
 # Greater Condition
-Author: Kaboi the Bird Ranger
+Author: Kab the Bird Ranger
 Special Thanks: Kirk.O aka Magicono43, Hazelnut, Ralzar
 Version: 1.0
 
@@ -66,3 +66,32 @@ Make sure the mod is enabled and "Mod system" is enabled in the starting menu un
 
 ## UNINSTALL
 Remove "Greater Condition.dfmod" from the "StreamingAssets/Mods" folder.
+
+## Mod Messaging
+
+Daggerfall Unity's ModManager can be used to send messages between mods through SendModMessage. This section will describe the messages supported by "Greater Condition", as well as each expected input and output.
+
+Note to other mods: if you have your own Inventory screen, consider using the GetMaxCharge and GetCurrentCharge message to show an item's magic charge in the info window.
+
+### GetMaxCharge
+Input: `ulong uid`
+- UID of the targeted item
+
+Output: `int charge`
+- The maximum amount of charge the item can hold. If 0, the specified id is not a magic item
+
+### GetCurrentCharge
+Input: `ulong uid`
+- UID of the targeted item
+
+Output: `int charge`
+- The current amount of charge of the item. Always 0 for when the id is not a magic item
+
+### RechargeItem
+Input: `ulong uid`
+- UID of the targeted item
+
+Output: none
+
+Effect: 
+- The specified magic item gets its current charge set to the maximum value

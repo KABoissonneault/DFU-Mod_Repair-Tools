@@ -6,7 +6,7 @@
 // Last Edit:		8/2/2020, 10:00 PM
 // Version:			1.05
 // Special Thanks:  Hazelnut and Ralzar
-// Modifier:		Hazelnut	
+// Modifier:		Hazelnut, Kab the Bird Ranger	
 
 using System;
 using System.Linq;
@@ -69,8 +69,10 @@ namespace RepairTools
         public AudioSource audioSource;
         Dictionary<ulong, ItemProperties> itemProperties = new Dictionary<ulong, ItemProperties>();
 
+
         public bool DebugLogs { get { return debugLogs; } }
         public AudioSource AudioSource {  get { return audioSource; } }
+        public IEnumerable<KeyValuePair<ulong, ItemProperties>> ItemProperties { get { return itemProperties; } }
 
         #region Item Properties
 
@@ -146,9 +148,7 @@ namespace RepairTools
             mod = initParams.Mod;
             var go = new GameObject("GreaterCondition");
             instance = go.AddComponent<RepairTools>(); // Add script to the scene.
-            instance.audioSource = go.AddComponent<AudioSource>();
-
-            mod.SaveDataInterface = instance;
+            instance.audioSource = go.AddComponent<AudioSource>();            
         }
 
         void Awake()
@@ -158,6 +158,8 @@ namespace RepairTools
 
             InitMod();
 
+            mod.SaveDataInterface = instance;
+            mod.MessageReceiver = MessageReceiver;
             mod.IsReady = true;
         }
 
@@ -185,6 +187,89 @@ namespace RepairTools
             UIWindowFactory.RegisterCustomUIWindow(UIWindowType.Inventory, typeof(RepairToolsInventoryWindow));
 
             Debug.Log("Finished mod init: Greater Condition");
+        }
+
+        void MessageReceiver(string message, object data, DFModMessageCallback callback)
+        {
+            switch(message)
+            {
+                case "GetMaxCharge":
+                    GetMaxCharge(data, callback);
+                    break;
+
+                case "GetCurrentCharge":
+                    GetCurrentCharge(data, callback);
+                    break;
+
+                case "RechargeItem":
+                    RechargeItem(data, callback);
+                    break;
+
+                default:
+                    Debug.LogError($"Greater Condition: Unknown message '{message}'");
+                    break;
+            }
+        }
+
+        void GetMaxCharge(object data, DFModMessageCallback callback)
+        {
+            ulong? arg = (ulong?)data;
+            if(arg == null)
+            {
+                Debug.LogError("Greater Condition: GetMaxCharge argument not a valid ulong");
+                callback?.Invoke("GetMaxCharge", 0);
+                return;
+            }
+
+            ulong uid = arg.Value;
+            ItemProperties props;
+            if(!itemProperties.TryGetValue(uid, out props))
+            {
+                callback?.Invoke("GetMaxCharge", 0);
+                return;
+            }
+
+            callback?.Invoke("GetMaxCharge", props.MaxCharge);
+        }
+
+        void GetCurrentCharge(object data, DFModMessageCallback callback)
+        {
+            ulong? arg = (ulong?)data;
+            if (arg == null)
+            {
+                Debug.LogError("Greater Condition: GetCurrentCharge argument not a valid ulong");
+                callback?.Invoke("GetCurrentCharge", 0);
+                return;
+            }
+
+            ulong uid = arg.Value;
+            ItemProperties props;
+            if (!itemProperties.TryGetValue(uid, out props))
+            {
+                callback?.Invoke("GetCurrentCharge", 0);
+                return;
+            }
+
+            callback?.Invoke("GetCurrentCharge", props.CurrentCharge);
+        }
+
+        void RechargeItem(object data, DFModMessageCallback callback)
+        {
+            ulong? arg = (ulong?)data;
+            if (arg == null)
+            {
+                Debug.LogError("Greater Condition: RechargeItem argument not a valid ulong");
+                return;
+            }
+
+            ulong uid = arg.Value;
+            ItemProperties props;
+            if (!itemProperties.TryGetValue(uid, out props))
+            {
+                return;
+            }
+
+            props.CurrentCharge = props.MaxCharge;
         }
 
         #endregion
