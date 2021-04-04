@@ -37,6 +37,7 @@ namespace RepairTools
                 ConsoleCommandsDatabase.RegisterCommand(RepairEquipment.name, RepairEquipment.description, RepairEquipment.usage, RepairEquipment.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(ClearInventory.name, ClearInventory.description, ClearInventory.usage, ClearInventory.Execute);
                 ConsoleCommandsDatabase.RegisterCommand(AddRepairTools.name, AddRepairTools.description, AddRepairTools.usage, AddRepairTools.Execute);
+                ConsoleCommandsDatabase.RegisterCommand(RechargeAllItems.name, RechargeAllItems.description, RechargeAllItems.usage, RechargeAllItems.Execute);
             }
             catch (Exception e)
             {
@@ -48,7 +49,7 @@ namespace RepairTools
         {
             public static readonly string name = "damage_equip";
             public static readonly string description = "Damages All Equipment In Inventory By 10% Per Use, For Testing";
-            public static readonly string usage = "Damages All Equipment";
+            public static readonly string usage = "DAMAGE_EQUIP";
 
             public static string Execute(params string[] args)
             {
@@ -74,7 +75,7 @@ namespace RepairTools
         {
             public static readonly string name = "repair_equip";
             public static readonly string description = "Repairs All Equipment In Inventory By 10% Per Use, For Testing";
-            public static readonly string usage = "Repairs All Equipment";
+            public static readonly string usage = "REPAIR_EQUIP";
 
             public static string Execute(params string[] args)
             {
@@ -98,7 +99,7 @@ namespace RepairTools
         {
             public static readonly string name = "clear_inventory";
             public static readonly string description = "Delete The Entire Current Inventory Of The Player, For Testing";
-            public static readonly string usage = "Delete The Entire Current Inventory";
+            public static readonly string usage = "CLEAR_INVENTORY";
 
             public static string Execute(params string[] args)
             {
@@ -134,6 +135,24 @@ namespace RepairTools
 
                 return "Repair tools have been added";
             }
+        }
+
+        private static class RechargeAllItems
+        {
+            public static readonly string name = "recharge_items";
+            public static readonly string description = "Refills all magic items' charge";
+            public static readonly string usage = "RECHARGE_ITEMS";
+
+            public static string Execute(params string[] args)
+            {
+                foreach(var kvp in RepairTools.Instance.ItemProperties)
+                {
+                    kvp.Value.CurrentCharge = kvp.Value.MaxCharge;
+                }
+
+                return "Magic items have been recharged";
+            }
+
         }
     }
 }
