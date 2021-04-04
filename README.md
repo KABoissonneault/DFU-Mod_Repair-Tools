@@ -1,68 +1,68 @@
-Name: Repair Tools
-Author: Kirk.O
-Special Thanks: Hazelnut, Ralzar
-Released On: Version 1.00, Released on 8/1/2020, 3:30 PM
-Version: 1.00
+# Greater Condition
+Author: Kaboi the Bird Ranger
+Special Thanks: Kirk.O aka Magicono43, Hazelnut, Ralzar
+Version: 1.0
 
-DESCRIPTION:
+## Description
+
+This mod lets you work your items into a Greater Condition. It expands on the previous Repair Tools mod to overhaul how item condition works in Daggerfall. This is reflected in the following features:
+
+- Just like Repair Tools, this mod features new items that can be found in stores that allow you to make manual repairs to your items while being out adventuring
+- Manual repairs now have a progression and an economy. It's harder to repair Daedric than it is to repair Iron, but you can get better at it
+- Magic items no longer rely on item condition. Instead, a separate "charge" meter has been added to each magic item, which has its own mechanics. Magic weapon and armor condition still works like normal
+
+### Repair Tools
+
 Multiple new items have been added to the shop pool of general store shelves. The primary purpose of these items is for use as a means to repair all types of equipment and items on 
 the go, without having to visit a blacksmith.
 
-WHAT DOES THIS MOD CHANGE AND WHY?:
--Each repair tool has a different category of items it is able to repair here is a list:
-1. Armorers Hammer: Plate Armor and Plate Shields from Iron to Adamantium, No Ebony, Orcish, or Daedric.
-2. Jewelers Pliers: Chain Armor and Chain Shields, THIS INCLUDES RPR:I's ADDED MAIL ARMORS (Iron to Adamantium, No Ebony, Orcish, or Daedric.)
-3. Sewing Kit: Clothing Items and Leather Armor and Leather Shields.
-4. Whetstone: Bladed Weapons, this includes: Axes, Swords, and Short-blades.
+The following tools repair an item's condition:
+
+1. Armorer's Hammer: Plate Armor and Plate Shields from Iron to Daedric
+2. Jeweler's Pliers: Chain Armor and Chain Shields, including Roleplay & Realism:Items's added mail armors (from Iron to Daedric)
+3. Sewing Kit: Clothing Items, and Leather Shields and Armor, including Roleplay & Realism: Items's added fur and brigandine armors (from Iron to Daedric)
+4. Whetstone: Bladed Weapons (this includes Axes, Swords, and Short blades)
 5. Epoxy Glue: Blunt Weapons and Bows.
-6. Charging Powder: Enchanted Items of all types, NOT including Artifacts and items made from Ebony, Orcish, or Daedric.
 
--These repair tools have different levels of rarity, so not every shop will stock the rare charging powder, and this rule applies for all the repair tools.
+In addition, magic items now use a separate Charge meter, rather than consume item condition on use. The following tools deal with magic charge:
 
--Some tools are more effective when used on certain items/materials than others. The key example being Charging Powder, which is more potent on items that are more innately 
-attractive to holding magical charge. This includes Silver, Dwarven, and Adamantium Items. Staves in general have great magical holding capabilities, Adamantium being the most 
-potent, and various other items such as Wands, Daggers, Mages Robes, etc.
+1. Charging Powder: Restores Charge for enchanted items of all type
 
--The amount that is repaired per use of a tool is dependent on the type of tool used, as well as increased or decreased slightly by the users Luck stat.
+#### Mechanics
 
--Use of a repair tool takes effort and therefore drains the player's stamina after being used, some tools are more strenuous to use than others, this can either be made more 
+- The Charging Powder is more potent on items that are more suited for magic usage. This includes Silver, Dwarven, and Adamantium Items. Staves in general have great magical holding capabilities, Adamantium being the most potent, and various other items such as Wands, Daggers, Mages Robes, etc.
+
+- The amount that is repaired per use of a tool is dependent on the type of tool used, as well as increased or decreased slightly by the users Luck stat.
+
+- Use of a repair tool takes effort and therefore drains the player's stamina after being used, some tools are more strenuous to use than others, this can either be made more 
 apparent depending on the endurance stat of the player.
 
--Repair tools CANNOT be used while enemies are nearby (just like when you can't rest) and can't be used if you are too exhausted.
+- Repair tools CANNOT be used while hostile enemies are nearby (just like when you can't rest) and can't be used if you are too exhausted.
 
--Tools have a limited durability and will eventually break from use.
+- Tools have a limited durability and will eventually break from use.
 
--Repair tools can only repair items up to a maximum of 80% of the maximum condition value. This is to keep Black-smiths in business, you are just a DIY amateur after all, you 
-need a professional to make something truly "Like New" again.
+- Repair tools can only repair items up to a certain maximum condition value. This value depends both on your ability to repair, and the material of the item. In general, stronger materials require stronger ability.
 
+### Magic Charge
 
-SPOILERS/MORE DETAILS:
--If you want EXACT numbers and information on how some mechanics and formula work in this mod, under the hood. You can look at the source code yourself from the github linked 
-lower down. You can also email/post a thread on the parent forum post linked below and I would be happy to answer any questions.
+- All magic items get a magic charge, which is visible from the Inventory screen (unless you use another mod which changes the Inventory screen)
 
--This mod was designed with other mods in mind, this includes "Roleplay Realism: Items" and my own mods that make equipment durability much more of a factor than in the 
-vanilla game, this mods include. Physical Combat And Armor Overhaul: https://www.nexusmods.com/daggerfallunity/mods/76 and if not using PCO my mod before that being, 
-Believable Equipment Characteristics And Durability: https://www.nexusmods.com/daggerfallunity/mods/75
+- Any time item condition would have been consumed in Daggerfall, the magic charge gets consumed instead. For Cast When Used effects, this occurs when the item is used (10 charge per use). For Cast When Strikes effects, this occurs when the weapon strikes a target (10 charge per use). For Cast When Held effects, there's an initial cost on equip based on the effect, and a slow decay over time. The decay is much slower while sleeping, and is completely stopped when fast traveling, in jail, or "tedious traveling" with Travel Options.
 
+## COMPATIBILITY
 
-OPTIONS:
+### Roleplay Realism: Items 
+The new chain mail and brigandine armors can be properly repaired by the repair tools
 
-	-No Additional Options As Of This Time.
+### Travel Options
+Unlike the Daggerfall Unity formula, this mod does not consume magic charge from Cast When Held magic items while using "tedious travel" from Travel Options
 
-VERSION HISTORY:
-
-8/1/2020:  1.00 - Initial Release
-
-
-COMPATIBILITY:
-This mod should have no compatibility issues, as it simply adds new assets into the game. THIS IS COMPATIBLE with Roleplay Realism: Items, added items, including the chain mail armors. 
-
-INSTALLATION:
+## INSTALLATION
 Unzip and open the folder that matches your operating system (Windows/OSX/Linux)
 
-Copy the "RepairTools.dfmod" into your DaggerfallUnity_Data\StreamingAssets\Mods folder
+Copy the "Greater Condition.dfmod" into your DaggerfallUnity_Data\StreamingAssets\Mods folder
 
 Make sure the mod is enabled and "Mod system" is enabled in the starting menu under "Advanced -> Enhancements"
 
-UNINSTALL:
-Remove "RepairTools.dfmod" from the "StreamingAssets/Mods" folder.
+## UNINSTALL
+Remove "Greater Condition.dfmod" from the "StreamingAssets/Mods" folder.
