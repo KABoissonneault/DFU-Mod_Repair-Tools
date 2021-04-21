@@ -165,7 +165,7 @@ namespace RepairTools
 
         #region InitMod and Settings
 
-        private static void InitMod()
+        private void InitMod()
         {
             Debug.Log("Begin mod init: Greater Condition");
 
@@ -178,6 +178,10 @@ namespace RepairTools
             itemHelper.RegisterCustomItem(ItemEpoxyGlue.templateIndex, ItemGroups.UselessItems2, typeof(ItemEpoxyGlue));
             itemHelper.RegisterCustomItem(ItemChargingPowder.templateIndex, ItemGroups.UselessItems2, typeof(ItemChargingPowder));
 
+            itemHelper.RegisterCustomItem(ItemMetalScraps.templateIndex, ItemGroups.MiscItems, typeof(ItemMetalScraps));
+            itemHelper.RegisterCustomItem(ItemClothScraps.templateIndex, ItemGroups.MiscItems, typeof(ItemClothScraps));
+            itemHelper.RegisterCustomItem(ItemWoodScraps.templateIndex, ItemGroups.MiscItems, typeof(ItemWoodScraps));
+
             // Replace CastWhenHeld, CastWhenStrikes, and CastWhenUsed item effects to use magic charge instead of durability
             GameManager.Instance.EntityEffectBroker.RegisterEffectTemplate(new RepairToolsCastWhenHeld(), true);
             GameManager.Instance.EntityEffectBroker.RegisterEffectTemplate(new RepairToolsCastWhenStrikes(), true);
@@ -185,6 +189,10 @@ namespace RepairTools
 
             // Custom windows
             UIWindowFactory.RegisterCustomUIWindow(UIWindowType.Inventory, typeof(RepairToolsInventoryWindow));
+
+            // New drops
+            EnemyEntity.OnLootSpawned += OnEnemyLootSpawned;
+            LootTables.OnLootSpawned += OnLootPileSpawned;
 
             Debug.Log("Finished mod init: Greater Condition");
         }
@@ -209,6 +217,95 @@ namespace RepairTools
                     Debug.LogError($"Greater Condition: Unknown message '{message}'");
                     break;
             }
+        }
+
+        void OnEnemyLootSpawned(object sender, EnemyLootSpawnedEventArgs e)
+        {            
+            if(IsHumanoid(e.MobileEnemy))
+            {
+                DaggerfallUnityItem drop = RandomScrap(e.MobileEnemy.Level);
+                if (drop != null)
+                {
+                    e.Items.AddItem(drop);
+                }
+            }
+        }
+
+        void OnLootPileSpawned(object sender, TabledLootSpawnedEventArgs e)
+        {
+            if(GameManager.Instance.IsPlayerInsideDungeon)
+            {
+                // Orc Stronghold
+                // Human Stronghold
+                // Prison
+                // Ruined Castle
+                // Barbarian Stronghold
+                // Cemetery
+                if (e.Key == "N")
+                {
+                    DaggerfallUnityItem drop = RandomScrap(GameManager.Instance.PlayerEntity.Level);
+                    if (drop != null)
+                    {
+                        e.Items.AddItem(drop);
+                    }
+                }
+            }
+        }
+
+        bool IsHumanoid(MobileEnemy mobileEnemy)
+        {
+            if (mobileEnemy.Affinity == MobileAffinity.Human)
+                return true;
+
+            switch(mobileEnemy.ID)
+            {
+                case (int)MobileTypes.Orc:
+                case (int)MobileTypes.Centaur:
+                case (int)MobileTypes.OrcSergeant:
+                case (int)MobileTypes.Giant:
+                case (int)MobileTypes.OrcShaman:
+                case (int)MobileTypes.OrcWarlord:
+                case (int)MobileTypes.Zombie:
+                    return true;
+            }
+
+            return false;
+        }
+
+        DaggerfallUnityItem RandomScrap(int level)
+        {
+            level = Math.Max(level, 1);
+
+            int templateIndex;
+
+            switch(UnityEngine.Random.Range(1, 15))
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    templateIndex = ItemMetalScraps.templateIndex;
+                    break;
+                case 5:
+                case 6:
+                    templateIndex = ItemClothScraps.templateIndex;
+                    break;
+                case 7:
+                    templateIndex = ItemWoodScraps.templateIndex;
+                    break;
+                default:
+                    return null;
+            }
+
+            int roll = UnityEngine.Random.Range(0, 20);
+            int levelIndex = Mathf.Min(level, 20) - 1;
+            int dropQuality = ScrapDropTable[levelIndex, roll];
+            if (dropQuality == 0)
+                return null;
+
+            DaggerfallUnityItem scraps = ItemBuilder.CreateItem(ItemGroups.MiscItems, templateIndex);
+            scraps.stackCount = UnityEngine.Random.Range(1, 101);
+            return scraps;
         }
 
         void GetMaxCharge(object data, DFModMessageCallback callback)
@@ -384,5 +481,30 @@ namespace RepairTools
         }
         #endregion
 
+        #region Tables
+        int[,] ScrapDropTable =
+        {
+            { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1 }
+            , { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1 }
+            , { 0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1 }
+            , { 0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1 }
+            , { 0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }
+            , { 0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2 }
+            , { 0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2 }
+            , { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2 }
+            , { 1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2 }
+            , { 1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2 }
+            , { 1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3 }
+            , { 1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3 }
+            , { 1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3 }
+            , { 1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3 }
+            , { 1,1,1,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3 }
+            , { 1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4 }
+            , { 1,1,1,1,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4 }
+            , { 1,1,1,1,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4 }
+            , { 1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,4,4,4,5 }
+            , { 1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5 }
+        };
+        #endregion
     }
 }

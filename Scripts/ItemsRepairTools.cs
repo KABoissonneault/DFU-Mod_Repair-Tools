@@ -415,5 +415,57 @@ namespace RepairTools
             ShowCustomTextBox(toolBroke, itemToRepair, false); // Shows the specific text-box after repairing an item.
         }
     }
+
+    public class ItemMetalScraps : DaggerfallUnityItem
+    {
+        public const int templateIndex = 810;
+
+        public ItemMetalScraps()
+            : base(ItemGroups.UselessItems2, templateIndex)
+        {
+
+        }
+        public override ItemData_v1 GetSaveData()
+        {
+            ItemData_v1 data = base.GetSaveData();
+            data.className = "ItemMetalScraps";
+            return data;
+        }
+    }
+
+    public class ItemClothScraps : DaggerfallUnityItem
+    {
+        public const int templateIndex = 811;
+
+        public ItemClothScraps()
+            : base(ItemGroups.UselessItems2, templateIndex)
+        {
+
+        }
+
+        public override ItemData_v1 GetSaveData()
+        {
+            ItemData_v1 data = base.GetSaveData();
+            data.className = "ItemClothScraps";
+            return data;
+        }
+    }
+
+    public class ItemWoodScraps : DaggerfallUnityItem
+    {
+        public const int templateIndex = 812;
+
+        public ItemWoodScraps()
+            : base(ItemGroups.UselessItems2, templateIndex)
+        {
+
+        }
+        public override ItemData_v1 GetSaveData()
+        {
+            ItemData_v1 data = base.GetSaveData();
+            data.className = "ItemWoodScraps";
+            return data;
+        }
+    }
 }
 

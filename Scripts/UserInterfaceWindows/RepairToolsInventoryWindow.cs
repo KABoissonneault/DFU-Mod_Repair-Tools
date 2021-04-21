@@ -29,7 +29,7 @@ namespace RepairTools
         #endregion
 
         #region Private Methods
-        void UpdateItemInfoPanel(DaggerfallUnityItem item)
+        protected override void UpdateItemInfoPanel(DaggerfallUnityItem item)
         {
             // Display info in local target icon panel, replacing justification tokens
             TextFile.Token[] tokens = ItemHelper.GetItemInfo(item, DaggerfallUnity.TextProvider);
@@ -42,22 +42,10 @@ namespace RepairTools
 
             UpdateItemInfoPanel(tokens);
         }
-
-        private void UpdateItemInfoPanel(TextFile.Token[] tokens)
-        {
-            for (int tokenIdx = 0; tokenIdx < tokens.Length; tokenIdx++)
-            {
-                if (tokens[tokenIdx].formatting == TextFile.Formatting.JustifyCenter)
-                    tokens[tokenIdx].formatting = TextFile.Formatting.NewLine;
-                if (tokens[tokenIdx].text != null)
-                    tokens[tokenIdx].text = tokens[tokenIdx].text.Replace(kgSrc, kgRep).Replace(damSrc, damRep).Replace(arSrc, arRep);
-            }
-            itemInfoPanelLabel.SetText(tokens);
-        }
         #endregion
 
         #region Item Click Event Handlers
-        protected override void AccessoryItemsButton_OnMouseClick(BaseScreenComponent sender, Vector2 position)
+        protected override void AccessoryItemsButton_OnLeftMouseClick(BaseScreenComponent sender, Vector2 position)
         {
             if(selectedActionMode == ActionModes.Info)
             {
@@ -72,23 +60,8 @@ namespace RepairTools
             }
             else
             {
-                base.AccessoryItemsButton_OnMouseClick(sender, position);
+                base.AccessoryItemsButton_OnLeftMouseClick(sender, position);
             }
-        }
-
-        protected override void AccessoryItemsButton_OnMouseEnter(BaseScreenComponent sender)
-        {
-            // Get item
-            EquipSlots slot = (EquipSlots)sender.Tag;
-            DaggerfallUnityItem item = playerEntity.ItemEquipTable.GetItem(slot);
-            if (item == null)
-                return;
-            UpdateItemInfoPanel(item);
-        }
-
-        protected override void ItemListScroller_OnHover(DaggerfallUnityItem item)
-        {
-            UpdateItemInfoPanel(item);
         }
         #endregion
 

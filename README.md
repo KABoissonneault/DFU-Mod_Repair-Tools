@@ -51,6 +51,9 @@ apparent depending on the endurance stat of the player.
 
 ## COMPATIBILITY
 
+### Repair Tools
+This mod entirely replaces Repair Tools. Do not use the two together.
+
 ### Roleplay Realism: Items 
 The new chain mail and brigandine armors can be properly repaired by the repair tools
 
