@@ -81,7 +81,7 @@ namespace RepairTools
             if (!item.IsEnchanted)
                 return;
 
-            props.MaxCharge = Mathf.RoundToInt(item.ItemTemplate­.hitPoints * GetEnchantmentBonusMultipler(item));
+            props.MaxCharge = Mathf.RoundToInt(item.ItemTemplate.hitPoints * GetEnchantmentBonusMultipler(item));
             props.CurrentCharge = props.MaxCharge;
         }
 
