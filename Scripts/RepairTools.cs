@@ -81,7 +81,7 @@ namespace RepairTools
             if (!item.IsEnchanted)
                 return;
 
-            props.MaxCharge = item.ItemTemplate­.hitPoints;
+            props.MaxCharge = Mathf.RoundToInt(item.ItemTemplate­.hitPoints * GetEnchantmentBonusMultipler(item));
             props.CurrentCharge = props.MaxCharge;
         }
 
@@ -233,21 +233,46 @@ namespace RepairTools
 
         void OnLootPileSpawned(object sender, TabledLootSpawnedEventArgs e)
         {
-            if(GameManager.Instance.IsPlayerInsideDungeon)
+            // Orc Stronghold
+            // Human Stronghold
+            // Prison
+            // Ruined Castle
+            // Barbarian Stronghold
+            // Cemetery
+            // Giant Stronghold
+            if (e.Key == "N" || e.Key == "F")
             {
-                // Orc Stronghold
-                // Human Stronghold
-                // Prison
-                // Ruined Castle
-                // Barbarian Stronghold
-                // Cemetery
-                if (e.Key == "N")
+                int level = GameManager.Instance.PlayerEntity.Level;
+                DaggerfallUnityItem drop = RandomScrap(level);
+                if (drop != null)
                 {
-                    DaggerfallUnityItem drop = RandomScrap(GameManager.Instance.PlayerEntity.Level);
-                    if (drop != null)
-                    {
-                        e.Items.AddItem(drop);
-                    }
+                    e.Items.AddItem(drop);
+                }
+            }
+            // Coven
+            // Laboratory
+            else if (e.Key == "Q" || e.Key == "U")
+            {
+                int level = Math.Max(Math.Min(GameManager.Instance.PlayerEntity.Level, 20) - 1, 1);
+                DaggerfallUnityItem drop = RandomScrap(level);
+                if (drop != null)
+                {
+                    e.Items.AddItem(drop);
+                }
+            }
+            // Mine
+            // Natural Cave
+            // Volcanic Cave
+            // Crypt
+            // Desecrated Temple
+            // Vampire Haunt
+            else if (e.Key == "M" || e.Key == "K")
+            {
+                int level = Math.Max(Math.Min(GameManager.Instance.PlayerEntity.Level, 20) - 2, 1);
+                DaggerfallUnityItem drop = RandomScrap(level);
+                if (drop != null)
+                {
+                    e.Items.AddItem(drop);
                 }
             }
         }
@@ -266,6 +291,10 @@ namespace RepairTools
                 case (int)MobileTypes.OrcShaman:
                 case (int)MobileTypes.OrcWarlord:
                 case (int)MobileTypes.Zombie:
+                case (int)MobileTypes.AncientLich:
+                case (int)MobileTypes.Lich:
+                case (int)MobileTypes.Vampire:
+                case (int)MobileTypes.VampireAncient:
                     return true;
             }
 
@@ -278,20 +307,30 @@ namespace RepairTools
 
             int templateIndex;
 
-            switch(UnityEngine.Random.Range(1, 15))
+            switch(UnityEngine.Random.Range(0, 30))
             {
+                case 0:
                 case 1:
                 case 2:
                 case 3:
                 case 4:
-                    templateIndex = ItemMetalScraps.templateIndex;
-                    break;
                 case 5:
                 case 6:
+                case 7:
+                    templateIndex = ItemMetalScraps.templateIndex;
+                    break;
+                case 8:
+                case 9:
+                case 10:
+                case 11:
                     templateIndex = ItemClothScraps.templateIndex;
                     break;
-                case 7:
+                case 12:
+                case 13:
                     templateIndex = ItemWoodScraps.templateIndex;
+                    break;
+                case 14:
+                    templateIndex = ItemSoulCharges.templateIndex;
                     break;
                 default:
                     return null;
@@ -304,7 +343,7 @@ namespace RepairTools
                 return null;
 
             DaggerfallUnityItem scraps = ItemBuilder.CreateItem(ItemGroups.MiscItems, templateIndex);
-            scraps.stackCount = UnityEngine.Random.Range(1, 101);
+            scraps.stackCount = dropQuality;
             return scraps;
         }
 
@@ -374,10 +413,8 @@ namespace RepairTools
         #region Formulas
         public static int GetEffectiveRepairSkill(PlayerEntity playerEntity)
         {
-            int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
-            int agiMod = (int)Mathf.Round((playerEntity.Stats.LiveAgility - 50f) / 10);
             int backgroundMod = playerEntity.Career.Name == "Knight" ? 6 : 0; // knights get +6 because of their backstory
-            return Mathf.Clamp(playerEntity.Level * 5, 5, 100) + luckMod + agiMod + backgroundMod;
+            return Mathf.Clamp(playerEntity.Level * 5, 5, 100) + backgroundMod;
         }
 
         public static int GetSkillTarget(DaggerfallUnityItem item)
@@ -438,6 +475,50 @@ namespace RepairTools
             int diff = Mathf.Max(effectiveSkill - targetSkill, -10);
             float r = a * Mathf.Atan(diff / c) + b;
             return (int)Mathf.Round(r);
+        }
+
+        public static float GetEnchantmentBonusMultipler(DaggerfallUnityItem item)
+        {
+            if (item.TemplateIndex == (int)Weapons.Staff)
+            {
+                if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Elven)
+                    return 2.25f;
+                else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Silver)
+                    return 2.50f;
+                else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Adamantium)
+                    return 3.00f;
+                else
+                    return 1.75f;
+            }
+            else if (item.TemplateIndex == (int)Weapons.Dagger)
+            {
+                if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Elven)
+                    return 1.50f;
+                else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Silver)
+                    return 1.75f;
+                else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Adamantium)
+                    return 2.00f;
+                else
+                    return 1.25f;
+            }
+            else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Elven)
+                return 1.25f;
+            else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Silver)
+                return 1.50f;
+            else if (item.NativeMaterialValue == (int)WeaponMaterialTypes.Adamantium)
+                return 1.75f;
+            else if (item.TemplateIndex == (int)Jewellery.Mark || item.TemplateIndex == (int)Jewellery.Wand)
+                return 2.50f;
+            else if (item.TemplateIndex == (int)Jewellery.Amulet || item.TemplateIndex == (int)Jewellery.Torc || item.TemplateIndex == (int)Jewellery.Cloth_amulet)
+                return 1.50f;
+            else if (item.TemplateIndex == (int)Jewellery.Ring)
+                return 1.25f;
+            else if (item.TemplateIndex == (int)MensClothing.Plain_robes || item.TemplateIndex == (int)WomensClothing.Plain_robes)
+                return 2.00f;
+            else if (item.TemplateIndex == (int)MensClothing.Priest_robes || item.TemplateIndex == (int)WomensClothing.Priestess_robes)
+                return 1.25f;
+
+            return 1f;
         }
 
         #endregion

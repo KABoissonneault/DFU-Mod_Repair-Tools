@@ -8,6 +8,7 @@
 // Special Thanks:  Hazelnut and Ralzar
 // Modifier:		Hazelnut
 
+using System.Collections.Generic;
 using UnityEngine;
 using DaggerfallWorkshop;
 using DaggerfallWorkshop.Game;
@@ -23,8 +24,6 @@ namespace RepairTools
     public class ItemWhetstone : AbstractItemRepairTools
     {
         public const int templateIndex = 800;
-
-        public override int DurabilityLoss => 20;
 
         public ItemWhetstone() : base(ItemGroups.UselessItems2, templateIndex)
         {
@@ -49,19 +48,27 @@ namespace RepairTools
             return (skill == DFCareer.Skills.ShortBlade || skill == DFCareer.Skills.LongBlade || skill == DFCareer.Skills.Axe);
         }
 
-        public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
+        public override IEnumerable<ScrapsCost> GetScrapsCosts(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return Random.Range(14 + luckMod, 26 + luckMod);
+            DFCareer.Skills skill = item.GetWeaponSkillID();
+            if(skill == DFCareer.Skills.Axe)
+               return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Metal, Count = 1 }, new ScrapsCost { Type = ScrapsType.Wood, Count = 1 } };
+            else
+               return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Metal, Count = 2 } };
         }
 
-        public override int GetStaminaDrain(int endurMod)
+        public override float GetStaminaDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 10 - endurMod;
+            float strengthMod = playerEntity.Stats.LiveStrength / 2f;
+            return Mathf.Max(75 - strengthMod, 25);
         }
 
-        public override int GetTimeDrain(int speedMod, int agiliMod)
+        public override float GetTimeDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 1800 - (speedMod * 100) - (agiliMod * 50);
+            float strengthMod = playerEntity.Stats.LiveStrength * 3;
+            float enduranceMod = playerEntity.Stats.LiveEndurance * 6;
+            float speedMod = playerEntity.Stats.LiveSpeed * 6;
+            return Mathf.Max(3600 - enduranceMod - speedMod - strengthMod, 1200);
         }
     }
 
@@ -86,8 +93,6 @@ namespace RepairTools
             return data;
         }
 
-        public override int DurabilityLoss => 20;
-
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
@@ -99,19 +104,22 @@ namespace RepairTools
                 || item.TemplateIndex == 530);
         }
 
-        public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
+        public override IEnumerable<ScrapsCost> GetScrapsCosts(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return Random.Range(20 + luckMod, 38 + luckMod);
+            return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Cloth, Count = 2 } };
         }
 
-        public override int GetStaminaDrain(int endurMod)
+        public override float GetStaminaDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 4;
+            float agiMod = playerEntity.Stats.LiveAgility * 0.3f;
+            return Mathf.Max(40 - agiMod, 10);
         }
 
-        public override int GetTimeDrain(int speedMod, int agiliMod)
+        public override float GetTimeDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 1800 - (speedMod * 70) - (agiliMod * 80);
+            float agiMod = playerEntity.Stats.LiveAgility * 9;
+            float speedMod = playerEntity.Stats.LiveSpeed * 6;
+            return Mathf.Max(3600 - agiMod - speedMod, 1200);
         }
     }
 
@@ -136,26 +144,29 @@ namespace RepairTools
             return data;
         }
 
-        public override int DurabilityLoss => 30;
-
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             return item.ItemGroup == ItemGroups.Armor && item.NativeMaterialValue >= (int)ArmorMaterialTypes.Iron;
         }
 
-        public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
+        public override IEnumerable<ScrapsCost> GetScrapsCosts(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return Random.Range(14 + luckMod, 22 + luckMod);
+            return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Metal, Count = 2 } };
         }
 
-        public override int GetStaminaDrain(int endurMod)
+        public override float GetStaminaDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 14 - endurMod;
+            float strengthMod = playerEntity.Stats.LiveStrength / 4f;
+            float agiMod = playerEntity.Stats.LiveAgility / 4f;
+            return Mathf.Max(75 - strengthMod - agiMod, 25);
         }
 
-        public override int GetTimeDrain(int speedMod, int agiliMod)
+        public override float GetTimeDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 1800 - (speedMod * 50) - (agiliMod * 30);
+            float strengthMod = playerEntity.Stats.LiveStrength * 6;
+            float enduranceMod = playerEntity.Stats.LiveEndurance * 6;
+            float speedMod = playerEntity.Stats.LiveSpeed * 3;
+            return Mathf.Max(3600 - enduranceMod - speedMod - strengthMod, 1200);
         }
     }
 
@@ -180,8 +191,6 @@ namespace RepairTools
             return data;
         }
 
-        public override int DurabilityLoss => 25;
-
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             // This is using knowledge of the R&R:Items internals and may break if that mod ever changes.
@@ -189,19 +198,22 @@ namespace RepairTools
                 item.NativeMaterialValue <= (int)ArmorMaterialTypes.Daedric - 0x100;
         }
 
-        public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
+        public override IEnumerable<ScrapsCost> GetScrapsCosts(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return Random.Range(14 + luckMod, 22 + luckMod);
+            return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Metal, Count = 2 } };
         }
 
-        public override int GetStaminaDrain(int endurMod)
+        public override float GetStaminaDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 11 - endurMod;
+            float agiMod = playerEntity.Stats.LiveAgility * 0.3f;
+            return Mathf.Max(40 - agiMod, 10);
         }
 
-        public override int GetTimeDrain(int speedMod, int agiliMod)
+        public override float GetTimeDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 1800 - (speedMod * 60) - (agiliMod * 50);
+            float agiMod = playerEntity.Stats.LiveAgility * 9;
+            float speedMod = playerEntity.Stats.LiveSpeed * 6;
+            return Mathf.Max(3600 - agiMod - speedMod, 1200);
         }
     }
 
@@ -226,8 +238,6 @@ namespace RepairTools
             return data;
         }
 
-        public override int DurabilityLoss => 10;
-
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             DFCareer.Skills skill = item.GetWeaponSkillID();
@@ -235,19 +245,30 @@ namespace RepairTools
             return (skill == DFCareer.Skills.BluntWeapon || skill == DFCareer.Skills.Archery);
         }
 
-        public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
+        public override IEnumerable<ScrapsCost> GetScrapsCosts(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return Random.Range(12 + luckMod, 20 + luckMod);
+            DFCareer.Skills skill = item.GetWeaponSkillID();
+            if (skill == DFCareer.Skills.Archery)
+            {
+                return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Wood, Count = 1 }, new ScrapsCost { Type = ScrapsType.Cloth, Count = 1 } };
+            }
+            else
+            {
+                return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Wood, Count = 2 } };
+            }
         }
 
-        public override int GetStaminaDrain(int endurMod)
+        public override float GetStaminaDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 12 - endurMod;
+            float agiMod = playerEntity.Stats.LiveAgility * 0.3f;
+            return Mathf.Max(40 - agiMod, 10);
         }
 
-        public override int GetTimeDrain(int speedMod, int agiliMod)
+        public override float GetTimeDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 1800 - (speedMod * 40) - (agiliMod * 20);
+            float agiMod = playerEntity.Stats.LiveAgility * 9;
+            float speedMod = playerEntity.Stats.LiveSpeed * 6;
+            return Mathf.Max(3600 - agiMod - speedMod, 1200);
         }
     }
 
@@ -272,73 +293,34 @@ namespace RepairTools
             return data;
         }
 
-        public override int DurabilityLoss => 20;
-
         public override bool IsValidForRepair(DaggerfallUnityItem item)
         {
             return item.IsEnchanted;
         }
 
-        public override int GetRepairPercentage(int luckMod, DaggerfallUnityItem itemToRepair)
+        public override IEnumerable<ScrapsCost> GetScrapsCosts(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            int repairPercentage = Random.Range(7 + luckMod, 13 + luckMod);
-
-            // Adds bonus repair value amount with Charging Powder repairing more for staves and adamantium items, etc.
-            return (int)Mathf.Round(repairPercentage * GetBonusMultiplier(itemToRepair));
+            return new ScrapsCost[] { new ScrapsCost { Type = ScrapsType.Soul, Count = 2 } };
         }
 
-        public override int GetStaminaDrain(int endurMod)
+        public override float GetStaminaDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 4;
+            float intMod = playerEntity.Stats.LiveIntelligence * 0.3f;
+            return Mathf.Max(40 - intMod, 10) / RepairTools.GetEnchantmentBonusMultipler(item);
         }
 
-        public override int GetTimeDrain(int speedMod, int agiliMod)
+        public override float GetTimeDrain(DaggerfallUnityItem item, PlayerEntity playerEntity)
         {
-            return 1200 - (speedMod * 20) - (agiliMod * 10);
+            float intMod = playerEntity.Stats.LiveIntelligence * 6f;
+            float wilMod = playerEntity.Stats.LiveWillpower * 6f;
+            float speedMod = playerEntity.Stats.LiveSpeed * 3f;
+            return Mathf.Max(3600 - intMod - wilMod - speedMod, 1200) / RepairTools.GetEnchantmentBonusMultipler(item);
         }
 
-        private float GetBonusMultiplier(DaggerfallUnityItem item)
+        protected override void DoRepair(DaggerfallUnityItem itemToRepair, int percentageThreshold)
         {
-            if (item.TemplateIndex == (int)Weapons.Staff)
-            {
-                if (item.NativeMaterialValue == 2)       // Silver Staff
-                    return 2.25f;
-                else if (item.NativeMaterialValue == 4)  // Dwarven Staff
-                    return 2.50f;
-                else if (item.NativeMaterialValue == 6)  // Adamantium Staff
-                    return 3.00f;
-                else                                // All Other Staves
-                    return 1.75f;
-            }
-            else if (item.TemplateIndex == (int)Weapons.Dagger)
-            {
-                if (item.NativeMaterialValue == 2)       // Silver Dagger
-                    return 1.50f;
-                else if (item.NativeMaterialValue == 4)  // Dwarven Dagger
-                    return 1.75f;
-                else if (item.NativeMaterialValue == 6)  // Adamantium Dagger
-                    return 2.00f;
-                else                                // All Other Daggers
-                    return 1.25f;
-            }
-            else if (item.NativeMaterialValue == 4)      // Dwarven Item
-                return 1.25f;
-            else if (item.NativeMaterialValue == 2)      // Silver Item
-                return 1.50f;
-            else if (item.NativeMaterialValue == 6)      // Adamantium Item
-                return 1.75f;
-            else if (item.TemplateIndex == (int)Jewellery.Wand)
-                return 2.50f;
-            else if (item.TemplateIndex == (int)Jewellery.Amulet || TemplateIndex == (int)Jewellery.Torc)
-                return 1.50f;
-            else if (item.TemplateIndex == (int)Jewellery.Ring)
-                return 1.25f;
-            else if (item.TemplateIndex == (int)MensClothing.Plain_robes || TemplateIndex == (int)WomensClothing.Plain_robes)
-                return 2.00f;
-            else if (item.TemplateIndex == (int)MensClothing.Priest_robes || TemplateIndex == (int)WomensClothing.Priestess_robes)
-                return 1.25f;
-
-            return 1f;
+            ItemProperties props = RepairTools.Instance.GetItemProperties(itemToRepair);
+            props.CurrentCharge = (int)Mathf.Round(props.MaxCharge * (percentageThreshold / 100f));
         }
 
         public override bool UseItem(ItemCollection collection)
@@ -381,50 +363,24 @@ namespace RepairTools
 
             return true;
         }
-
-        // Method for calculations and work after a list item has been selected.
-        new void RepairItem_OnItemPicked(int index, string itemName)
-        {
-            DaggerfallUI.Instance.PlayOneShot(SoundClips.ButtonClick);
-            DaggerfallUI.UIManager.PopWindow();
-            PlayerEntity playerEntity = GameManager.Instance.PlayerEntity;
-            DaggerfallUnityItem itemToRepair = validRepairItems[index]; // Gets the item object associated with what was selected in the list window.
-            ItemProperties props = RepairTools.Instance.GetItemProperties(itemToRepair);
-
-            int luckMod = (int)Mathf.Round((playerEntity.Stats.LiveLuck - 50f) / 10);
-            int endurMod = (int)Mathf.Round((playerEntity.Stats.LiveEndurance - 50f) / 10);
-            int speedMod = (int)Mathf.Round((playerEntity.Stats.LiveSpeed - 50f) / 10);
-            int agiliMod = (int)Mathf.Round((playerEntity.Stats.LiveAgility - 50f) / 10);
-
-            float rechargePercentage = GetRepairPercentage(luckMod, itemToRepair);
-            int staminaDrainValue = GetStaminaDrain(endurMod);
-            int TimeDrainValue = GetTimeDrain(speedMod, agiliMod);
-
-            int rechargeAmount = (int)Mathf.Round(props.MaxCharge * (rechargePercentage / 100f));
-            props.CurrentCharge = Mathf.Min(props.CurrentCharge + rechargeAmount, props.MaxCharge);
-
-            bool toolBroke = currentCondition <= DurabilityLoss;
-            LowerConditionWorkaround(DurabilityLoss, playerEntity, repairItemCollection); // Damages repair tool condition.
-
-            // Force inventory window update
-            DaggerfallUI.Instance.InventoryWindow.Refresh();
-
-            PlayAudioTrack(); // Plays the appropriate sound effect for a specific repair tool.
-            playerEntity.DecreaseFatigue(staminaDrainValue, true); // Reduce player current stamina value from the action of repairing.
-            DaggerfallUnity.Instance.WorldTime.Now.RaiseTime(TimeDrainValue); // Forwards time by an amount of minutes in-game time.
-            ShowCustomTextBox(toolBroke, itemToRepair, false); // Shows the specific text-box after repairing an item.
-        }
     }
 
     public class ItemMetalScraps : DaggerfallUnityItem
     {
         public const int templateIndex = 810;
+        public const ItemGroups itemGroup = ItemGroups.UselessItems2;
 
         public ItemMetalScraps()
-            : base(ItemGroups.UselessItems2, templateIndex)
+            : base(itemGroup, templateIndex)
         {
 
         }
+
+        public override bool IsStackable()
+        {
+            return true;
+        }
+
         public override ItemData_v1 GetSaveData()
         {
             ItemData_v1 data = base.GetSaveData();
@@ -436,11 +392,17 @@ namespace RepairTools
     public class ItemClothScraps : DaggerfallUnityItem
     {
         public const int templateIndex = 811;
+        public const ItemGroups itemGroup = ItemGroups.UselessItems2;
 
         public ItemClothScraps()
-            : base(ItemGroups.UselessItems2, templateIndex)
+            : base(itemGroup, templateIndex)
         {
 
+        }
+
+        public override bool IsStackable()
+        {
+            return true;
         }
 
         public override ItemData_v1 GetSaveData()
@@ -454,16 +416,47 @@ namespace RepairTools
     public class ItemWoodScraps : DaggerfallUnityItem
     {
         public const int templateIndex = 812;
+        public const ItemGroups itemGroup = ItemGroups.UselessItems2;
 
         public ItemWoodScraps()
-            : base(ItemGroups.UselessItems2, templateIndex)
+            : base(itemGroup, templateIndex)
         {
 
         }
+
+        public override bool IsStackable()
+        {
+            return true;
+        }
+
         public override ItemData_v1 GetSaveData()
         {
             ItemData_v1 data = base.GetSaveData();
             data.className = "ItemWoodScraps";
+            return data;
+        }
+    }
+
+    public class ItemSoulCharges : DaggerfallUnityItem
+    {
+        public const int templateIndex = 813;
+        public const ItemGroups itemGroup = ItemGroups.UselessItems2;
+
+        public ItemSoulCharges()
+            : base(itemGroup, templateIndex)
+        {
+
+        }
+
+        public override bool IsStackable()
+        {
+            return true;
+        }
+
+        public override ItemData_v1 GetSaveData()
+        {
+            ItemData_v1 data = base.GetSaveData();
+            data.className = "ItemSoulCharges";
             return data;
         }
     }

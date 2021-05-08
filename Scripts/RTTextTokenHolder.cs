@@ -25,42 +25,42 @@ namespace RepairTools
                     case 800:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You sharpen your " + itemRepaired.LongName + "'s blade.",
+                            $"You sharpen the blade of your {itemRepaired.LongName}.",
 							"",
-                            "The Whetstone is no longer abrasive enough to sharpen with,",
+                            "The Whetstone has too much wear for further use,",
                             "you discard it.");
                     case 801:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You sew together cuts and loose seams in your " + itemRepaired.LongName + ".",
+                            $"You sew together cuts and loose seams in your {itemRepaired.LongName}.",
                             "",
                             "The Sewing Kit spool has ran out of thread,",
                             "you throw it away.");
                     case 802:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You flatten and reshape dings and dents in your " + itemRepaired.LongName + ".",
+                            $"You flatten and reshape dings and dents in your {itemRepaired.LongName}.",
                             "",
-                            "The Armorers Hammer handle snaps near the sledge, useless now,",
+                            "The Armorers Hammer handle snaps near the sledge and breaks down completely,",
                             "you toss it to your side.");
                     case 803:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You bend together broken links and close gaps in your " + itemRepaired.LongName + ".",
+                            "You bend together broken links and close gaps in your {itemRepaired.LongName}.",
                             "",
-                            "The Jewelers Pliers break off at the pivot point, useless now,",
-                            "you discard them");
+                            "The Jewelers Pliers break off at the pivot point.",
+                            "You discard them.");
                     case 804:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You glue and reinforce splits and cracks in your " + itemRepaired.LongName + "'s frame.",
+                            $"You glue and reinforce splits and cracks in the frame of your {itemRepaired.LongName}.",
                             "",
-                            "The Epoxy Glue bottle has run out of liquid,",
-                            "you throw the empty container away.");
+                            "The Epoxy Glue bottle has run empty,",
+                            "you throw the container away.");
                     case 805:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You sprinkle the strange powder on your " + itemRepaired.LongName + ". It surges with energy.",
+                            $"You sprinkle the strange powder on your {itemRepaired.LongName}. It surges with energy.",
                             "",
                             "The Charging Powder bag has gone empty,",
                             "you toss the empty container away");
@@ -77,27 +77,27 @@ namespace RepairTools
                     case 800:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You sharpen your " + itemRepaired.LongName + "'s blade.");
+                            $"You sharpen your the blade of your {itemRepaired.LongName}.");
                     case 801:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You sew together cuts and loose seams in your " + itemRepaired.LongName);
+                            $"You sew together cuts and loose seams in your {itemRepaired.LongName}.");
                     case 802:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You flatten and reshape dings and dents in your " + itemRepaired.LongName + ".");
+                            $"You flatten and reshape dings and dents in your {itemRepaired.LongName}.");
                     case 803:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You bend together broken links and close gaps in your " + itemRepaired.LongName + ".");
+                            $"You bend together broken links and close gaps in your {itemRepaired.LongName}.");
                     case 804:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You glue and reinforce splits and cracks in your " + itemRepaired.LongName + "'s frame.");
+                            $"You glue and reinforce splits and cracks in the frame of your {itemRepaired.LongName}.");
                     case 805:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
-                            "You sprinkle the strange powder on your " + itemRepaired.LongName + ". It surges with energy.");
+                            $"You sprinkle the strange powder on your {itemRepaired.LongName}. It surges with energy.");
                     default:
                         return DaggerfallUnity.Instance.TextProvider.CreateTokens(
                             TextFile.Formatting.JustifyCenter,
