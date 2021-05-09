@@ -135,15 +135,16 @@ namespace RepairTools
             {
                 DaggerfallUnityItem item = playerEntity.Items.GetItem(i);
 
-                int targetSkill = RepairTools.GetSkillTarget(item);
-                int maxPercentage = RepairTools.MaxConditionPercent(playerSkill, targetSkill);
-
                 if (IsValidForRepair(item))
                 {
                     IEnumerable<ScrapsCost> scrapsCosts = GetScrapsCosts(item, playerEntity);
 
+                    int targetSkill = RepairTools.GetSkillTarget(item);
+                    int maxPercentage = RepairTools.MaxConditionPercent(playerSkill, targetSkill);
+                    int currentPercentage = Mathf.RoundToInt(100f * item.currentCondition / item.maxCondition);
+
                     validRepairItems.Add(item);
-                    string validItemName = $"{item.LongName}  {item.ConditionPercentage}% | {maxPercentage} %";
+                    string validItemName = $"{item.LongName}  {currentPercentage}% | {maxPercentage}%";
 
                     if(scrapsCosts.Count() > 0)
                     {
@@ -172,7 +173,7 @@ namespace RepairTools
 
         protected virtual float GetRepairPercentage(DaggerfallUnityItem itemToRepair, int percentageThreshold)
         {
-            int maxRepairThresh = (int)Mathf.Round(itemToRepair.maxCondition * (percentageThreshold / 100f));
+            int maxRepairThresh = Mathf.RoundToInt(itemToRepair.maxCondition * percentageThreshold / 100f);
             int repairAmount = maxRepairThresh - itemToRepair.currentCondition;
             return (float)repairAmount / itemToRepair.maxCondition;
         }
@@ -199,9 +200,10 @@ namespace RepairTools
 
             int playerSkill = RepairTools.GetEffectiveRepairSkill(playerEntity);
             int targetSkill = RepairTools.GetSkillTarget(itemToRepair);
+            int currentPercentage = Mathf.RoundToInt(100f * itemToRepair.currentCondition / itemToRepair.maxCondition);
             int maxPercentage = RepairTools.MaxConditionPercent(playerSkill, targetSkill);
 
-            if (itemToRepair.ConditionPercentage >= maxPercentage)
+            if (currentPercentage >= maxPercentage)
             {
                 ShowCustomTextBox(GetNotDamagedEnoughTokens(itemToRepair));
                 return;
